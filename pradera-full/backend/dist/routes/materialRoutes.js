@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const materialController_1 = require("../controllers/materialController");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+router.get('/', auth_1.ensureAuth, materialController_1.getMaterials);
+router.get('/:id', auth_1.ensureAuth, materialController_1.getMaterialById);
+router.post('/', auth_1.ensureAuth, materialController_1.createMaterial);
+router.put('/:id', auth_1.ensureAuth, materialController_1.updateMaterial);
+router.delete('/:id', auth_1.ensureAuth, materialController_1.deleteMaterial);
+router.get('/requests/all', auth_1.ensureAuth, materialController_1.getMaterialRequests);
+router.post('/requests/create', auth_1.ensureAuth, materialController_1.createMaterialRequest);
+router.put('/requests/:id', auth_1.ensureAuth, materialController_1.updateMaterialRequest);
+router.delete('/requests/:id', auth_1.ensureAuth, materialController_1.deleteMaterialRequest);
+exports.default = router;

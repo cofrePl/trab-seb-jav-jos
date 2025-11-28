@@ -1,0 +1,231 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  JEFE_PROYECTO
+  LIDER_CUADRILLA
+  TRABAJADOR
+}
+
+enum CrewState {
+  ACTIVA
+  EN_PAUSA
+  FINALIZADA
+}
+
+enum MaterialRequestState {
+  PENDIENTE
+  ASIGNADO
+  AGOTADO
+  COMPLETADO
+}
+
+enum RequestType {
+  MATERIAL
+  HERRAMIENTA
+  APOYO
+  PERMISO
+}
+
+enum RequestStatus {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+  projects  Project[] @relation("ProjectJefe")
+  logs      Log[]
+  sentMessages       Message[] @relation("MessageSender")
+  receivedMessages   Message[] @relation("MessageReceiver")
+  requests           CommunicationRequest[]
+}
+
+model Project {
+  id               String   @id @default(cuid())
+  name             String
+  tipo_obra        String
+  complejidad      String
+  duracion_estimada Int?
+  fecha_inicio     DateTime?
+  fecha_termino    DateTime?
+  zona_trabajo     String
+  estado           String
+  presupuesto      Float?
+  supervisor       String?
+  descripcion_tecnica String?
+  jefeId           String?
+  jefe             User?    @relation("ProjectJefe", fields: [jefeId], references: [id])
+  crews            Crew[]
+  materialRequests MaterialRequest[]
+  logs             Log[]
+  milestones       Milestone[]
+  auditLogs        AuditLog[]
+}
+
+model Worker {
+  id             String   @id @default(cuid())
+  name           String
+  especialidad   String
+  certificaciones String?
+  experiencia    Int?
+  disponibilidad Boolean  @default(true)
+  estado         String
+  zona_preferencia String?
+  crewWorkers    CrewWorker[]
+  certificates   Certificate[]
+}
+
+model Crew {
+  id          String       @id @default(cuid())
+  name        String
+  projectId   String?
+  project     Project?     @relation(fields: [projectId], references: [id])
+  fecha_inicio DateTime?
+  estado      CrewState
+  zona_trabajo String?
+  fecha_plazo DateTime?
+  crewWorkers CrewWorker[]
+  logs        Log[]
+  materialRequests MaterialRequest[]
+  communicationRequests CommunicationRequest[]
+  tasks       Task[]
+}
+
+model CrewWorker {
+  id           String   @id @default(cuid())
+  crewId       String
+  workerId     String
+  role         String
+  fecha_asignacion DateTime @default(now())
+  crew         Crew     @relation(fields: [crewId], references: [id])
+  worker       Worker   @relation(fields: [workerId], references: [id])
+}
+
+model Log {
+  id                     String   @id @default(cuid())
+  crewId                 String
+  projectId              String
+  descripcion            String?
+  incidentes             String?
+  consumo_materiales     String?
+  avance                 String?
+  fecha                  DateTime @default(now())
+  responsableId          String
+  actividades            String?
+  materiales_consumidos  String?
+  tiempos_trabajo        String?
+  observaciones          String?
+  estado_herramientas    String?
+  crew                   Crew     @relation(fields: [crewId], references: [id])
+  project                Project  @relation(fields: [projectId], references: [id])
+  responsable            User     @relation(fields: [responsableId], references: [id])
+}
+
+model Material {
+  id          String   @id @default(cuid())
+  name        String
+  descripcion String?
+  stock       Int
+  unidad      String
+  precio      Float
+  requests    MaterialRequest[]
+}
+
+model MaterialRequest {
+  id          String   @id @default(cuid())
+  materialId  String
+  projectId   String
+  crewId      String
+  cantidad    Int
+  estado      MaterialRequestState
+  material    Material @relation(fields: [materialId], references: [id])
+  project     Project  @relation(fields: [projectId], references: [id])
+  crew        Crew     @relation(fields: [crewId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String
+  receiverId  String
+  content     String
+  conversationId String?
+  createdAt   DateTime @default(now())
+  sender      User     @relation("MessageSender", fields: [senderId], references: [id])
+  receiver    User     @relation("MessageReceiver", fields: [receiverId], references: [id])
+}
+
+model CommunicationRequest {
+  id          String         @id @default(cuid())
+  senderId    String
+  requestType RequestType
+  description String
+  urgency     String         @default("NORMAL")
+  crewId      String
+  estado      RequestStatus  @default(PENDIENTE)
+  respuesta   String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  sender      User           @relation(fields: [senderId], references: [id])
+  crew        Crew           @relation(fields: [crewId], references: [id])
+}
+
+model Certificate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  workers     Worker[]
+  createdAt   DateTime @default(now())
+}
+
+model Milestone {
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  description String?
+  targetDate  DateTime
+  estado      String   @default("PENDIENTE")
+  project     Project  @relation(fields: [projectId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  crewId      String
+  title       String
+  description String?
+  prioridad   String   @default("NORMAL")
+  estado      String   @default("PENDIENTE")
+  fecha_vencimiento DateTime?
+  crew        Crew     @relation(fields: [crewId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String
+  entity      String
+  entityId    String?
+  projectId   String?
+  changes     String?
+  ipAddress   String?
+  project     Project? @relation(fields: [projectId], references: [id])
+  createdAt   DateTime @default(now())
+}
