@@ -33,6 +33,7 @@ export default function Logs() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState({
     crewId: '',
     projectId: '',
@@ -72,7 +73,11 @@ export default function Logs() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await api.post('/logs', form)
+      if (editingId) {
+        await api.put(`/logs/${editingId}`, form)
+      } else {
+        await api.post('/logs', form)
+      }
       setForm({
         crewId: '',
         projectId: '',
@@ -84,10 +89,37 @@ export default function Logs() {
         observaciones: '',
         estado_herramientas: ''
       })
+      setEditingId(null)
       setShowForm(false)
       fetchData()
     } catch (err: any) {
       console.error('Error:', err)
+    }
+  }
+
+  const handleEdit = (log: Log) => {
+    setForm({
+      crewId: log.crewId,
+      projectId: log.projectId,
+      fecha: new Date(log.fecha).toISOString().split('T')[0],
+      actividades: log.actividades || '',
+      incidentes: log.incidentes || '',
+      materiales: log.materiales_consumidos || '',
+      tiempos: log.tiempos_trabajo || '',
+      observaciones: log.observaciones || '',
+      estado_herramientas: log.estado_herramientas || ''
+    })
+    setEditingId(log.id)
+    setShowForm(true)
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('¿Eliminar esta bitácora?')) return
+    try {
+      await api.delete(`/logs/${id}`)
+      fetchData()
+    } catch (err: any) {
+      console.error('Error al eliminar bitácora:', err)
     }
   }
 
@@ -96,7 +128,12 @@ export default function Logs() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Bitácora de Proyectos</h1>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            setShowForm(!showForm); setEditingId(null); setForm({
+              crewId: '', projectId: '', fecha: new Date().toISOString().split('T')[0],
+              actividades: '', incidentes: '', materiales: '', tiempos: '', observaciones: '', estado_herramientas: ''
+            })
+          }}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           + Nueva Entrada
@@ -214,7 +251,7 @@ export default function Logs() {
             </button>
             <button
               type="button"
-              onClick={() => setShowForm(false)}
+              onClick={() => { setShowForm(false); setEditingId(null) }}
               className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
             >
               Cancelar
@@ -254,6 +291,10 @@ export default function Logs() {
                       <p className="text-red-600">{log.incidentes.substring(0, 100)}...</p>
                     </div>
                   )}
+                </div>
+                <div className="mt-4 flex justify-end gap-2">
+                  <button onClick={() => handleEdit(log)} className="text-blue-600 hover:text-blue-800 font-medium text-sm">Editar</button>
+                  <button onClick={() => handleDelete(log.id)} className="text-red-600 hover:text-red-800 font-medium text-sm">Eliminar</button>
                 </div>
               </div>
             ))

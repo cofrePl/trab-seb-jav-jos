@@ -1,5 +1,9 @@
 import { Request, Response } from 'express'
 import prisma from '../services/prismaClient'
+import { workZones } from '../constants/workZones'
+import { bannedWords } from '../constants/bannedWords'
+import { albures } from '../constants/albures'
+import { projectTypes } from '../constants/projectTypes'
 
 export const getProjects = async (req: Request, res: Response) => {
   try {
@@ -32,8 +36,27 @@ export const createProject = async (req: Request, res: Response) => {
     if (!name || !tipo_obra || !zona_trabajo) {
       return res.status(400).json({ error: 'Nombre, tipo de obra y zona de trabajo son requeridos' })
     }
+    if (!projectTypes.includes(tipo_obra)) {
+      return res.status(400).json({ error: 'El tipo de obra no es válido. Debe ser uno de los tipos permitidos.' })
+    }
+    for (const word of bannedWords) {
+      if (name.toLowerCase().includes(word.toLowerCase())) {
+        return res.status(400).json({ error: `La palabra '${word}' no está permitida en el nombre` })
+      }
+    }
+    for (const albur of albures) {
+      if (name.toLowerCase().includes(albur.toLowerCase())) {
+        return res.status(400).json({ error: 'El nombre contiene una frase no permitida' })
+      }
+    }
     if (duracion_estimada !== undefined && duracion_estimada !== null && parseInt(duracion_estimada) < 0) {
       return res.status(400).json({ error: 'La duración estimada no puede ser negativa. Mínimo: 0' })
+    }
+    if (/\d/.test(zona_trabajo)) {
+      return res.status(400).json({ error: 'La zona de trabajo no puede contener números' })
+    }
+    if (!workZones.includes(zona_trabajo)) {
+      return res.status(400).json({ error: 'La zona de trabajo no es válida. Debe ser una de las zonas permitidas.' })
     }
     const project = await prisma.project.create({
       data: {
@@ -51,19 +74,19 @@ export const createProject = async (req: Request, res: Response) => {
       },
       include: { milestones: true }
     })
-    
+
     // Generar hitos automáticos basado en fechas
     if (fecha_inicio && fecha_termino) {
       const start = new Date(fecha_inicio)
       const end = new Date(fecha_termino)
       const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24))
-      
+
       const milestones = [
         { title: 'Inicio del Proyecto', targetDate: start, description: 'Kickoff del proyecto' },
         { title: 'Fase Media', targetDate: new Date(start.getTime() + (diffDays / 2) * 24 * 3600 * 1000), description: 'Punto medio del proyecto' },
         { title: 'Fin del Proyecto', targetDate: end, description: 'Cierre y entrega final' }
       ]
-      
+
       for (const milestone of milestones) {
         await prisma.milestone.create({
           data: {
@@ -76,7 +99,7 @@ export const createProject = async (req: Request, res: Response) => {
         })
       }
     }
-    
+
     res.json(project)
   } catch (error: any) {
     res.status(500).json({ error: error.message })
@@ -86,9 +109,30 @@ export const createProject = async (req: Request, res: Response) => {
 export const updateProject = async (req: Request, res: Response) => {
   try {
     const { id } = req.params
-    const { name, tipo_obra, complejidad, duracion_estimada, zona_trabajo, estado } = req.body
+    const { name, tipo_obra, complejidad, duracion_estimada, zona_trabajo, estado, presupuesto } = req.body
+    if (name) {
+      for (const word of bannedWords) {
+        if (name.toLowerCase().includes(word.toLowerCase())) {
+          return res.status(400).json({ error: `La palabra '${word}' no está permitida en el nombre` })
+        }
+      }
+      for (const albur of albures) {
+        if (name.toLowerCase().includes(albur.toLowerCase())) {
+          return res.status(400).json({ error: 'El nombre contiene una frase no permitida' })
+        }
+      }
+    }
     if (duracion_estimada !== undefined && duracion_estimada !== null && parseInt(duracion_estimada) < 0) {
       return res.status(400).json({ error: 'La duración estimada no puede ser negativa. Mínimo: 0' })
+    }
+    if (zona_trabajo && /\d/.test(zona_trabajo)) {
+      return res.status(400).json({ error: 'La zona de trabajo no puede contener números' })
+    }
+    if (zona_trabajo && !workZones.includes(zona_trabajo)) {
+      return res.status(400).json({ error: 'La zona de trabajo no es válida. Debe ser una de las zonas permitidas.' })
+    }
+    if (tipo_obra && !projectTypes.includes(tipo_obra)) {
+      return res.status(400).json({ error: 'El tipo de obra no es válido. Debe ser uno de los tipos permitidos.' })
     }
     const project = await prisma.project.update({
       where: { id },
@@ -98,7 +142,8 @@ export const updateProject = async (req: Request, res: Response) => {
         ...(complejidad && { complejidad }),
         ...(duracion_estimada && { duracion_estimada: parseInt(duracion_estimada) }),
         ...(zona_trabajo && { zona_trabajo }),
-        ...(estado && { estado })
+        ...(estado && { estado }),
+        ...(presupuesto && { presupuesto: parseFloat(presupuesto) })
       }
     })
     res.json(project)

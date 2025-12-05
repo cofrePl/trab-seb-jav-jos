@@ -13,14 +13,22 @@ interface Request {
   createdAt: string
 }
 
+interface Crew {
+  id: string
+  name: string
+}
+
 export default function Requests() {
   const [requests, setRequests] = useState<Request[]>([])
+  const [crews, setCrews] = useState<Crew[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState({
     requestType: 'MATERIAL',
     description: '',
-    urgency: 'NORMAL'
+    urgency: 'NORMAL',
+    crewId: ''
   })
   const { user, token } = useAuth()
 
@@ -32,8 +40,12 @@ export default function Requests() {
   const fetchRequests = async () => {
     try {
       setLoading(true)
-      const { data } = await api.get('/communication/requests')
-      setRequests(data)
+      const [requestsRes, crewsRes] = await Promise.all([
+        api.get('/communication/requests'),
+        api.get('/crews')
+      ])
+      setRequests(requestsRes.data)
+      setCrews(crewsRes.data)
     } catch (err: any) {
       console.error('Error:', err)
     } finally {
@@ -44,11 +56,19 @@ export default function Requests() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await api.post('/communication/requests', {
-        ...form,
-        senderId: user?.id
-      })
-      setForm({ requestType: 'MATERIAL', description: '', urgency: 'NORMAL' })
+      if (editingId) {
+        await api.put(`/communication/requests/${editingId}`, {
+          ...form,
+          senderId: user?.id
+        })
+      } else {
+        await api.post('/communication/requests', {
+          ...form,
+          senderId: user?.id
+        })
+      }
+      setForm({ requestType: 'MATERIAL', description: '', urgency: 'NORMAL', crewId: '' })
+      setEditingId(null)
       setShowForm(false)
       fetchRequests()
     } catch (err: any) {
@@ -74,6 +94,27 @@ export default function Requests() {
         status: 'RECHAZADA',
         response: 'Solicitud rechazada'
       })
+      fetchRequests()
+    } catch (err: any) {
+      console.error('Error:', err)
+    }
+  }
+
+  const handleEdit = (req: any) => {
+    setForm({
+      requestType: req.requestType,
+      description: req.description,
+      urgency: req.urgency,
+      crewId: req.crewId || '' // Assuming crewId might be missing in older records
+    })
+    setEditingId(req.id)
+    setShowForm(true)
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('¿Eliminar esta solicitud?')) return
+    try {
+      await api.delete(`/communication/requests/${id}`)
       fetchRequests()
     } catch (err: any) {
       console.error('Error:', err)
@@ -107,7 +148,7 @@ export default function Requests() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Solicitudes</h1>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ requestType: 'MATERIAL', description: '', urgency: 'NORMAL', crewId: '' }) }}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           + Nueva Solicitud
@@ -128,6 +169,21 @@ export default function Requests() {
                 <option value="HERRAMIENTA">Herramienta</option>
                 <option value="APOYO">Apoyo</option>
                 <option value="PERMISO">Permiso Personal</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Cuadrilla</label>
+              <select
+                value={form.crewId}
+                onChange={e => setForm({ ...form, crewId: e.target.value })}
+                required
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Seleccionar cuadrilla</option>
+                {crews.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
               </select>
             </div>
 
@@ -161,7 +217,7 @@ export default function Requests() {
             </button>
             <button
               type="button"
-              onClick={() => setShowForm(false)}
+              onClick={() => { setShowForm(false); setEditingId(null) }}
               className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
             >
               Cancelar
@@ -220,6 +276,10 @@ export default function Requests() {
                     </button>
                   </div>
                 )}
+                <div className="mt-2 flex gap-2 justify-end">
+                  <button onClick={() => handleEdit(req)} className="text-blue-600 hover:text-blue-800 font-medium text-sm">Editar</button>
+                  <button onClick={() => handleDelete(req.id)} className="text-red-600 hover:text-red-800 font-medium text-sm">Eliminar</button>
+                </div>
               </div>
             ))
           )}

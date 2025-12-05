@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getMessages, createMessage, createRequest, getRequests, updateRequestStatus } from '../controllers/communicationController'
+import { getMessages, createMessage, createRequest, getRequests, updateRequest, deleteRequest } from '../controllers/communicationController'
 import { ensureAuth } from '../middleware/auth'
 
 const router = Router()
@@ -11,6 +11,7 @@ router.post('/messages', ensureAuth, createMessage)
 // Solicitudes
 router.get('/requests', ensureAuth, getRequests)
 router.post('/requests', ensureAuth, createRequest)
-router.put('/requests/:id', ensureAuth, updateRequestStatus)
+router.put('/requests/:id', ensureAuth, updateRequest)
+router.delete('/requests/:id', ensureAuth, deleteRequest)
 
 export default router

@@ -79,6 +79,7 @@ model Project {
 model Worker {
   id             String   @id @default(cuid())
   name           String
+  rut            String?  @unique
   especialidad   String
   certificaciones String?
   experiencia    Int?
@@ -98,6 +99,7 @@ model Crew {
   estado      CrewState
   zona_trabajo String?
   fecha_plazo DateTime?
+  cantidad_trabajadores Int?
   crewWorkers CrewWorker[]
   logs        Log[]
   materialRequests MaterialRequest[]

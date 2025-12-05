@@ -1,0 +1,23 @@
+export const workZones = [
+    "Norte Grande",
+    "Norte Chico",
+    "Zona Central",
+    "Zona Sur",
+    "Zona Austral",
+    "Región Metropolitana",
+    "Valparaíso",
+    "Biobío",
+    "Araucanía",
+    "Los Lagos",
+    "Maule",
+    "O'Higgins",
+    "Coquimbo",
+    "Antofagasta",
+    "Atacama",
+    "Tarapacá",
+    "Arica y Parinacota",
+    "Aysén",
+    "Magallanes",
+    "Los Ríos",
+    "Ñuble"
+];

@@ -79,7 +79,12 @@ export const getAuditStatistics = async (req: Request, res: Response) => {
       _count: true
     })
 
-    res.json(stats)
+    const formattedStats = stats.reduce((acc: any, curr) => {
+      acc[curr.action] = curr._count
+      return acc
+    }, { CREATE: 0, UPDATE: 0, DELETE: 0 })
+
+    res.json(formattedStats)
   } catch (error: any) {
     res.status(500).json({ error: error.message })
   }

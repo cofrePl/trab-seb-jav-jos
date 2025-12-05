@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+import { AuthRequest } from '../middleware/auth'
 import prisma from '../services/prismaClient'
 
 export const getLogs = async (req: Request, res: Response) => {
@@ -34,7 +35,7 @@ export const getLogById = async (req: Request, res: Response) => {
 export const createLog = async (req: Request, res: Response) => {
   try {
     const { crewId, projectId, fecha, actividades, incidentes, materiales, tiempos, observaciones, estado_herramientas } = req.body
-    
+
     if (!crewId || !projectId || !fecha) {
       return res.status(400).json({ error: 'crewId, projectId y fecha son requeridos' })
     }
@@ -52,7 +53,7 @@ export const createLog = async (req: Request, res: Response) => {
         tiempos_trabajo: tiempos || '',
         observaciones: observaciones || '',
         estado_herramientas: estado_herramientas || '',
-        responsableId: 'system'
+        responsableId: (req as AuthRequest).user.id
       },
       include: { crew: true, project: true }
     })
@@ -66,7 +67,7 @@ export const updateLog = async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const { actividades, incidentes, materiales, tiempos, observaciones, estado_herramientas } = req.body
-    
+
     const log = await prisma.log.update({
       where: { id },
       data: {

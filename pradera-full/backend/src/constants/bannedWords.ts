@@ -1,0 +1,22 @@
+export const bannedWords = [
+    "puto",
+    "mierda",
+    "fuck",
+    "shit",
+    "concha",
+    "pico",
+    "zorra",
+    "maricon",
+    "weon",
+    "culiao",
+    "idiota",
+    "estupido",
+    "imbecil",
+    "bastardo",
+    "perra",
+    "prostituta",
+    "verga",
+    "pene",
+    "vagina",
+    "culo"
+];

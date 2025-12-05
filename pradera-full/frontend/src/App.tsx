@@ -10,7 +10,7 @@ import Logs from './pages/Logs'
 import Requests from './pages/Requests'
 import Reports from './pages/Reports'
 import Communication from './pages/Communication'
-import Certificates from './pages/Certificates'
+
 import Planning from './pages/Planning'
 import Audit from './pages/Audit'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -34,7 +34,7 @@ function Navbar() {
             <Link to="/logs" className="hover:text-blue-600">Bitácoras</Link>
             <Link to="/requests" className="hover:text-blue-600">Solicitudes</Link>
             <Link to="/communication" className="hover:text-blue-600">Comunicación</Link>
-            <Link to="/certificates" className="hover:text-blue-600">Certificaciones</Link>
+
             <Link to="/planning" className="hover:text-blue-600">Planificación</Link>
             <Link to="/audit" className="hover:text-blue-600">Auditoría</Link>
             <Link to="/reports" className="hover:text-blue-600">Reportes</Link>
@@ -66,7 +66,7 @@ export default function App() {
             <Route path="/logs" element={<Logs />} />
             <Route path="/requests" element={<Requests />} />
             <Route path="/communication" element={<Communication />} />
-            <Route path="/certificates" element={<Certificates />} />
+
             <Route path="/planning" element={<Planning />} />
             <Route path="/audit" element={<Audit />} />
             <Route path="/reports" element={<Reports />} />

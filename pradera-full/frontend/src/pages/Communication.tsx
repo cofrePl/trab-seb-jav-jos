@@ -8,8 +8,8 @@ interface Message {
   receiverId: string
   content: string
   createdAt: string
-  senderName?: string
-  receiverName?: string
+  sender?: { name: string }
+  receiver?: { name: string }
 }
 
 interface Request {
@@ -31,7 +31,7 @@ export default function Communication() {
   const [loading, setLoading] = useState(true)
   const [messageContent, setMessageContent] = useState('')
   const [receiverId, setReceiverId] = useState('')
-  const [workers, setWorkers] = useState<any[]>([])
+  const [users, setUsers] = useState<any[]>([])
   const [requestInput, setRequestInput] = useState({
     requestType: 'MATERIAL',
     description: '',
@@ -49,15 +49,15 @@ export default function Communication() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const [messagesRes, requestsRes, workersRes, crewsRes] = await Promise.all([
+      const [messagesRes, requestsRes, usersRes, crewsRes] = await Promise.all([
         api.get('/communication/messages'),
         api.get('/communication/requests'),
-        api.get('/workers'),
+        api.get('/users'),
         api.get('/crews')
       ])
       setMessages(messagesRes.data)
       setRequests(requestsRes.data)
-      setWorkers(workersRes.data)
+      setUsers(usersRes.data)
       setCrews(crewsRes.data)
     } catch (err: any) {
       console.error('Error:', err)
@@ -167,21 +167,19 @@ export default function Communication() {
       <div className="mb-6 flex gap-4 border-b">
         <button
           onClick={() => setSelectedTab('mensajes')}
-          className={`px-4 py-2 font-medium ${
-            selectedTab === 'mensajes'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
+          className={`px-4 py-2 font-medium ${selectedTab === 'mensajes'
+            ? 'text-blue-600 border-b-2 border-blue-600'
+            : 'text-gray-600 hover:text-gray-800'
+            }`}
         >
           Mensajes
         </button>
         <button
           onClick={() => setSelectedTab('solicitudes')}
-          className={`px-4 py-2 font-medium ${
-            selectedTab === 'solicitudes'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
+          className={`px-4 py-2 font-medium ${selectedTab === 'solicitudes'
+            ? 'text-blue-600 border-b-2 border-blue-600'
+            : 'text-gray-600 hover:text-gray-800'
+            }`}
         >
           Solicitudes
         </button>
@@ -204,9 +202,9 @@ export default function Communication() {
                       onChange={e => setReceiverId(e.target.value)}
                       className="w-full border rounded p-2"
                     >
-                      <option value="">Selecciona trabajador</option>
-                      {workers.map(w => (
-                        <option key={w.id} value={w.id}>{w.name}</option>
+                      <option value="">Selecciona usuario</option>
+                      {users.map(u => (
+                        <option key={u.id} value={u.id}>{u.name}</option>
                       ))}
                     </select>
                   </div>
@@ -235,7 +233,7 @@ export default function Communication() {
                     {messages.map(msg => (
                       <div key={msg.id} className="p-3 border rounded hover:bg-gray-50">
                         <div className="flex justify-between mb-1">
-                          <span className="font-medium text-sm text-gray-800">{msg.senderName || 'Usuario'}</span>
+                          <span className="font-medium text-sm text-gray-800">{msg.sender?.name || 'Usuario'}</span>
                           <span className="text-xs text-gray-500">
                             {new Date(msg.createdAt).toLocaleDateString()}
                           </span>

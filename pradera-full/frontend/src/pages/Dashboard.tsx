@@ -73,10 +73,7 @@ export default function Dashboard() {
           <h2 className="text-xl font-bold text-cyan-900 mb-2">Comunicación</h2>
           <p className="text-cyan-700">Mensajes y solicitudes de recursos</p>
         </Link>
-        <Link to="/certificates" className="bg-teal-50 p-6 rounded-lg border-l-4 border-teal-500 hover:shadow-lg transition cursor-pointer">
-          <h2 className="text-xl font-bold text-teal-900 mb-2">Certificaciones</h2>
-          <p className="text-teal-700">Gestiona certificaciones de trabajadores</p>
-        </Link>
+
         <Link to="/planning" className="bg-pink-50 p-6 rounded-lg border-l-4 border-pink-500 hover:shadow-lg transition cursor-pointer">
           <h2 className="text-xl font-bold text-pink-900 mb-2">Planificación</h2>
           <p className="text-pink-700">Tareas, hitos y seguimiento del proyecto</p>

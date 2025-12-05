@@ -7,9 +7,10 @@ import materials from './materialRoutes'
 import logs from './logRoutes'
 import communication from './communicationRoutes'
 import reports from './reportRoutes'
-import certificates from './certificateRoutes'
+
 import tasks from './taskRoutes'
 import audit from './auditRoutes'
+import users from './userRoutes'
 
 const router = Router()
 
@@ -21,8 +22,9 @@ router.use('/materials', materials)
 router.use('/logs', logs)
 router.use('/communication', communication)
 router.use('/reports', reports)
-router.use('/certificates', certificates)
+
 router.use('/planning', tasks)
 router.use('/audit', audit)
+router.use('/users', users)
 
 export default router

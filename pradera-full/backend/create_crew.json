@@ -1,0 +1,9 @@
+{
+    "name": "Test Crew Curl",
+    "estado": "ACTIVA",
+    "cantidad_trabajadores": 5,
+    "workerIds": [
+        "cminstdra0000b1pszl6w3q4d",
+        "cminskzri0000kbvui5grvf2z"
+    ]
+}
